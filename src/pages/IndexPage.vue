@@ -1,5 +1,6 @@
 <template>
   <q-page class="row items-center justify-evenly">
+    {{ properties }}
     <example-component
       title="Example component"
       active
@@ -17,6 +18,12 @@ import { defineComponent, ref } from 'vue';
 export default defineComponent({
   name: 'IndexPage',
   components: { ExampleComponent },
+  props: {
+     properties: {
+        type: Array,
+        default: () => ([]),
+     },
+  },
   setup () {
     const todos = ref<Todo[]>([
       {

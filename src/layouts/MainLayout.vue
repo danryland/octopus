@@ -40,12 +40,15 @@
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <router-view :properties="properties" />
     </q-page-container>
   </q-layout>
 </template>
 
 <script lang="ts">
+
+import { supabase } from '../supabase';
+  
 import { defineComponent, ref } from 'vue';
 import EssentialLink from 'components/EssentialLink.vue';
 
@@ -104,7 +107,26 @@ export default defineComponent({
   setup () {
     const leftDrawerOpen = ref(false)
 
+    let properties = ref([]);
+
+    const getProperties = async () => {
+      try {
+        const { data, error } = await supabase
+        .from('properties')
+        .select()
+        if (error) throw error;
+        if (data) {
+          properties.value = data;
+        }
+      } catch (error) {
+        console.logo("An unexpected error occurred:", error);
+      }
+    };
+
+    getProperties();
+
     return {
+      properties,
       essentialLinks: linksList,
       leftDrawerOpen,
       toggleLeftDrawer () {
