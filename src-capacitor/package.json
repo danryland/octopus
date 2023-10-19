@@ -1,7 +1,7 @@
 {
-  "name": "quasar-replit",
-  "version": "0.0.1",
-  "description": "A Quasar Project",
+  "name": "octopulse",
+  "version": "1.0.0",
+  "description": "See your Octopus Energy usage",
   "author": "Dan Ryland <dan@ryland.consulting>",
   "private": true,
   "dependencies": {
