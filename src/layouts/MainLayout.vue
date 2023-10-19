@@ -131,6 +131,19 @@
         :meterGas="meterGas"
         :round="round"
       />
+      <div class="q-py-xl">
+        <q-btn
+          size="sm"
+          outline
+          flat
+          label="Clear API Key & Account ID"
+          color="red"
+          rounded
+          no-caps
+          class="full-width"
+          @click="reset()"
+        />
+      </div>
     </q-page-container>
   </q-layout>
 </template>
@@ -144,6 +157,7 @@ export default defineComponent({
   name: 'MainLayout',
 
   setup() {
+    const debug = ref(false);
     let dialog = ref(true);
     const accounts = ref(null);
     const meterElectric = ref();
@@ -159,7 +173,6 @@ export default defineComponent({
     );
     const octokey = ref(null);
     const accountID = ref(null);
-    const debug = ref(true);
     const round = ref(true);
 
     const updatePeriod = (day) => {
@@ -297,6 +310,12 @@ export default defineComponent({
       }
     };
 
+    const reset = () => {
+      octokey.value = null;
+      accountID.value = null;
+      dialog.value = true;
+    };
+
     return {
       updatePeriod,
       accounts,
@@ -313,6 +332,7 @@ export default defineComponent({
       octokey,
       accountID,
       seeUsage,
+      reset,
     };
   },
 });

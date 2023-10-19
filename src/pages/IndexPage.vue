@@ -37,18 +37,6 @@
         Total {{ totalGas.toFixed(toFixed) }}<small>m<sup>3</sup></small>
       </p>
     </div>
-    <div class="q-py-xl">
-      <q-btn
-        size="sm"
-        outline
-        flat
-        label="Clear API Key & Account ID"
-        color="red"
-        rounded
-        no-caps
-        class="full-width"
-      />
-    </div>
   </q-page>
 </template>
 
