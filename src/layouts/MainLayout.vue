@@ -130,8 +130,9 @@
         :meterElectric="meterElectric"
         :meterGas="meterGas"
         :round="round"
+        :isLoading="isLoading"
       />
-      <div class="q-py-xl">
+      <div class="q-pa-xl">
         <q-btn
           size="sm"
           outline
@@ -151,7 +152,8 @@
 <script>
 import axios from 'axios';
 import moment from 'moment';
-import { defineComponent, ref } from 'vue';
+import { defineComponent, onMounted, ref } from 'vue';
+import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -174,6 +176,31 @@ export default defineComponent({
     const octokey = ref(null);
     const accountID = ref(null);
     const round = ref(true);
+    const isLoading = ref(false);
+    const $q = useQuasar();
+
+    const checkStorage = () => {
+      console.log('checkStorage');
+      if ($q.localStorage.getItem('octopulse.octokey')) {
+        console.log('Yes has localStore');
+        octokey.value = $q.localStorage.getItem('octopulse.octokey');
+      } else {
+        console.log('No octokey store');
+      }
+      if ($q.localStorage.getItem('octopulse.accountID')) {
+        console.log('Yes has localStore');
+        accountID.value = $q.localStorage.getItem('octopulse.accountID');
+      } else {
+        console.log('No accountID store');
+      }
+      if (
+        $q.localStorage.getItem('octopulse.octokey') &&
+        $q.localStorage.getItem('octopulse.accountID')
+      ) {
+        getAccount();
+        dialog.value = false;
+      }
+    };
 
     const updatePeriod = (day) => {
       periodFrom.value = moment()
@@ -190,6 +217,7 @@ export default defineComponent({
     };
 
     const getAccount = async () => {
+      isLoading.value = true;
       const response = await axios.get(
         `https://api.octopus.energy/v1/accounts/${accountID.value}`,
         {
@@ -200,34 +228,50 @@ export default defineComponent({
       if (response.status === 200) {
         response.data.properties.forEach((property) => {
           if (!property.moved_out_at) {
-            const electricAgreement =
-              property.electricity_meter_points[0].agreements.find(
-                (ag) => !ag.valid_to
-              );
-            const gasAgreement = property.gas_meter_points[0].agreements.find(
-              (ag) => !ag.valid_to
-            );
+            //const now = new Date();
+
+            // const electricAgreement =
+            //   property.electricity_meter_points[0].agreements.find((ag) => {
+            //     const validFrom = new Date(ag.valid_from);
+            //     const validTo = new Date(ag.valid_to);
+            //     return now >= validFrom && now <= validTo;
+            //   });
+
+            // const gasAgreement = property.gas_meter_points[0].agreements.find(
+            //   (ag) => {
+            //     const validFrom = new Date(ag.valid_from);
+            //     const validTo = new Date(ag.valid_to);
+            //     return now >= validFrom && now <= validTo;
+            //   }
+            // );
+
+            console.log(property);
 
             accounts.value = {
               electric: {
                 mpan: property.electricity_meter_points[0].mpan,
-                tariff_code: electricAgreement.tariff_code,
+                //tariff_code: electricAgreement.tariff_code,
                 serial_number:
-                  property.electricity_meter_points[0].meters[0].serial_number,
+                  property.electricity_meter_points[0].meters[
+                    property.electricity_meter_points[0].meters.length - 1
+                  ].serial_number,
               },
               gas: {
                 mprn: property.gas_meter_points[0].mprn,
-                tariff_code: gasAgreement.tariff_code,
+                //tariff_code: gasAgreement.tariff_code,
                 serial_number:
                   property.gas_meter_points[0].meters[0].serial_number,
               },
             };
+
+            console.log(accounts.value);
 
             getMeterElectric();
             getMeterGas();
           }
         });
       }
+      isLoading.value = false;
     };
 
     const getMeterElectric = async () => {
@@ -245,6 +289,8 @@ export default defineComponent({
             auth: { username: octokey.value, password: '' },
           }
         );
+
+        console.log('Electric: ', response.data);
 
         if (response.status === 200) {
           meterElectric.value = response.data.results;
@@ -279,6 +325,8 @@ export default defineComponent({
           }
         );
 
+        console.log('Gas: ', response.data.results);
+
         if (response.status === 200) {
           meterGas.value = response.data.results;
           chartGas.value = {
@@ -296,15 +344,16 @@ export default defineComponent({
       }
     };
 
-    if (debug.value == true) {
-      octokey.value = 'sk_live_1uxFsuGnHOycW8Yfjo5upL7O';
-      accountID.value = 'A-1C2F6B9D';
-      dialog.value = false;
-      getAccount();
-    }
-
     const seeUsage = () => {
       if (octokey.value != null && accountID.value != null) {
+        try {
+          $q.localStorage.set('octopulse.octokey', octokey.value);
+          $q.localStorage.set('octopulse.accountID', accountID.value);
+          console.log('Store');
+        } catch (e) {
+          console.log(e);
+        }
+
         getAccount();
         dialog.value = false;
       }
@@ -313,8 +362,27 @@ export default defineComponent({
     const reset = () => {
       octokey.value = null;
       accountID.value = null;
+      accounts.value = null;
+      meterElectric.value = null;
+      meterGas.value = null;
+      chartElectric.value = { labels: [], datasets: [] };
+      chartGas.value = { labels: [], datasets: [] };
       dialog.value = true;
     };
+
+    onMounted(() => {
+      checkStorage();
+    });
+
+    if (debug.value == true) {
+      octokey.value = 'sk_live_1uxFsuGnHOycW8Yfjo5upL7O';
+      accountID.value = 'A-1C2F6B9D';
+
+      // octokey.value = 'sk_live_yFrxU1mNU2KSXnN3OvaAjG6P';
+      // accountID.value = 'A-7214B2FB';
+      dialog.value = false;
+      getAccount();
+    }
 
     return {
       updatePeriod,
@@ -333,6 +401,7 @@ export default defineComponent({
       accountID,
       seeUsage,
       reset,
+      isLoading,
     };
   },
 });

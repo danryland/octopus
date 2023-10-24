@@ -1,5 +1,13 @@
 <template>
   <q-page class="q-px-lg">
+    <div
+      v-if="isLoading"
+      class="flex items-center justify-center full-height full-width"
+      style="height: 50vh !important"
+    >
+      <q-spinner-ios color="primary" size="2em" />
+    </div>
+
     <div class="widget widget-goal">
       <PieChart :chartData="data" :options="options" />
     </div>
@@ -112,6 +120,10 @@ export default defineComponent({
       default: () => [],
     },
     round: {
+      type: Boolean,
+      default: false,
+    },
+    isLoading: {
       type: Boolean,
       default: false,
     },

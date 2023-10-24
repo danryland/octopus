@@ -155,3 +155,8 @@
     }
   }
 }
+
+body.q-ios-padding .q-dialog__inner > div {
+  padding: 0px !important;
+  height: 100vh !important;
+}
