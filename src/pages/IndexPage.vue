@@ -8,6 +8,8 @@
       <q-spinner-ios color="primary" size="2em" />
     </div>
 
+    <div style="display: none">{{ goal[goalType] }}</div>
+
     <div class="widget widget-goal">
       <PieChart :chartData="data" :options="options" />
     </div>
@@ -24,7 +26,31 @@
         <p v-else class="top">0.00<small>kWh</small></p>
         <BarChart :chartData="chartElectric" :options="optionsElectric" />
       </div>
-      <p>Total {{ totalElectric.toFixed(toFixed) }}<small>kWh</small></p>
+      <div class="footer">
+        <p>Total {{ totalElectric.toFixed(toFixed) }}<small>kWh</small></p>
+        <div class="flex items-center q-gutter-x-sm">
+          <q-linear-progress
+            size="8px"
+            rounded
+            :value="progressElectric"
+            color="green"
+            track-color="red"
+          />
+          <q-icon
+            v-if="progressElectric === 0"
+            name="wifi_off"
+            size="18px"
+            color="red"
+          />
+          <q-icon
+            v-else-if="progressElectric > 0 && progressElectric <= 0.5"
+            name="wifi"
+            size="18px"
+            color="yellow"
+          />
+          <q-icon v-else name="wifi" size="18px" color="green" />
+        </div>
+      </div>
     </div>
     <div v-if="totalElectric" class="widget widget-gas">
       <h2>🔥 Gas</h2>
@@ -41,9 +67,33 @@
         </p>
         <BarChart :chartData="chartGas" :options="optionsGas" />
       </div>
-      <p>
-        Total {{ totalGas.toFixed(toFixed) }}<small>m<sup>3</sup></small>
-      </p>
+      <div class="footer">
+        <p>
+          Total {{ totalGas.toFixed(toFixed) }}<small>m<sup>3</sup></small>
+        </p>
+        <div class="flex items-center q-gutter-x-sm">
+          <q-linear-progress
+            size="8px"
+            rounded
+            :value="progressGas"
+            color="green"
+            track-color="red"
+          />
+          <q-icon
+            v-if="progressGas === 0"
+            name="wifi_off"
+            size="18px"
+            color="red"
+          />
+          <q-icon
+            v-else-if="progressGas > 0 && progressGas <= 0.5"
+            name="wifi"
+            size="18px"
+            color="yellow"
+          />
+          <q-icon v-else name="wifi" size="18px" color="green" />
+        </div>
+      </div>
     </div>
   </q-page>
 </template>
@@ -127,6 +177,14 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    goalType: {
+      type: String,
+      default: 'medium',
+    },
+    goal: {
+      type: Object,
+      default: () => ({}),
+    },
   },
   setup(props) {
     const toFixed = computed(() => {
@@ -138,6 +196,9 @@ export default defineComponent({
     });
 
     const data = ref(null);
+
+    const progressElectric = ref(0);
+    const progressGas = ref(0);
 
     const optionsElectric = ref({
       responsive: true,
@@ -236,8 +297,11 @@ export default defineComponent({
     const percentGoalGas = ref(null);
 
     watchEffect(() => {
-      goalElectric.value = 2700 / 365;
-      goalGas.value = 1095.24 / 365;
+      goalElectric.value = props.goal[props.goalType].electric / 365;
+      goalGas.value = props.goal[props.goalType].gas / 365;
+
+      progressElectric.value = props.meterElectric.length / 24;
+      progressGas.value = props.meterGas.length / 24;
 
       percentTotalElectric.value =
         (totalElectric.value / goalElectric.value) * 100;
@@ -301,6 +365,8 @@ export default defineComponent({
       percentGoalElectric,
       percentTotalGas,
       percentGoalGas,
+      progressElectric,
+      progressGas,
     };
   },
 });

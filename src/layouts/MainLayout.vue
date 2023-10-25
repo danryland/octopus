@@ -1,5 +1,65 @@
 <template>
   <q-layout view="lHh Lpr lFf">
+    <q-dialog class="settings" v-model="showSettings">
+      <div>
+        <q-card style="min-width: 280px" class="q-mb-md">
+          <q-card-section>
+            <div class="text-h6">OctoPulse settings</div>
+          </q-card-section>
+          <q-card-section>
+            <q-btn-toggle
+              class="q-mb-sm"
+              v-model="goalType"
+              toggle-color="primary"
+              no-caps
+              :options="[
+                { label: 'Low', value: 'low' },
+                { label: 'Medium', value: 'medium' },
+                { label: 'Large', value: 'large' },
+              ]"
+            />
+            <p class="text-grey">
+              <small
+                >Typical amounts:
+                <a
+                  class="text-grey"
+                  href="https://www.ofgem.gov.uk/average-gas-and-electricity-usage#:~:text=We%20estimate%20the%20typical%20household,on%20energy%20prices%2C%20like%20the"
+                  >Ofgem</a
+                ></small
+              >
+            </p>
+          </q-card-section>
+          <q-card-section>
+            <q-toggle size="md" v-model="round" label="Two decimal places" />
+          </q-card-section>
+          <q-card-actions>
+            <q-btn
+              rounded
+              label="Done"
+              no-caps
+              outline
+              color="primary"
+              v-close-popup
+              class="full-width"
+            />
+          </q-card-actions>
+        </q-card>
+        <q-card>
+          <q-card-section>
+            <q-btn
+              outline
+              flat
+              label="Clear API Key & Account ID"
+              color="red"
+              rounded
+              no-caps
+              class="full-width"
+              @click="reset()"
+            />
+          </q-card-section>
+        </q-card>
+      </div>
+    </q-dialog>
     <q-dialog
       v-model="dialog"
       :maximized="dialog"
@@ -7,6 +67,7 @@
       seamless
       transition-show="slide-up"
       transition-hide="slide-down"
+      class="login"
     >
       <q-card class="bg-dark flex">
         <div class="top">
@@ -75,7 +136,7 @@
       <q-header class="bg-dark">
         <q-toolbar class="flex column items-center q-px-md q-py-lg">
           <div class="flex row full-width justify-between items-center q-pb-md">
-            <div style="width: 40px; text-align: left" class="menu">
+            <div style="width: 40px; text-align: left">
               <q-img
                 style="max-width: 32px"
                 src="~/assets/img/logo-octopus.svg"
@@ -93,8 +154,8 @@
                 {{ moment().subtract(activeDay, 'days').format('ddd, DD MMM') }}
               </template>
             </div>
-            <div style="width: 60px; text-align: right">
-              <q-toggle size="md" v-model="round" icon="tune" />
+            <div style="width: 40px; text-align: right">
+              <q-icon @click="toggleSettings" size="sm" name="settings" />
             </div>
           </div>
           <div class="days">
@@ -131,20 +192,9 @@
         :meterGas="meterGas"
         :round="round"
         :isLoading="isLoading"
+        :goal="goal"
+        :goalType="goalType"
       />
-      <div class="q-pa-xl">
-        <q-btn
-          size="sm"
-          outline
-          flat
-          label="Clear API Key & Account ID"
-          color="red"
-          rounded
-          no-caps
-          class="full-width"
-          @click="reset()"
-        />
-      </div>
     </q-page-container>
   </q-layout>
 </template>
@@ -178,20 +228,40 @@ export default defineComponent({
     const round = ref(true);
     const isLoading = ref(false);
     const $q = useQuasar();
+    let showSettings = ref(false);
+    const toggleSettings = () => {
+      showSettings.value = true;
+    };
+
+    const goalType = ref('medium');
+    const goal = ref({
+      low: {
+        electric: 1800,
+        gas: 711,
+      },
+      medium: {
+        electric: 2700,
+        gas: 1090,
+      },
+      large: {
+        electric: 4100,
+        gas: 1611,
+      },
+    });
 
     const checkStorage = () => {
       console.log('checkStorage');
       if ($q.localStorage.getItem('octopulse.octokey')) {
-        console.log('Yes has localStore');
+        //console.log('Yes has localStore');
         octokey.value = $q.localStorage.getItem('octopulse.octokey');
       } else {
-        console.log('No octokey store');
+        //console.log('No octokey store');
       }
       if ($q.localStorage.getItem('octopulse.accountID')) {
-        console.log('Yes has localStore');
+        //console.log('Yes has localStore');
         accountID.value = $q.localStorage.getItem('octopulse.accountID');
       } else {
-        console.log('No accountID store');
+        //console.log('No accountID store');
       }
       if (
         $q.localStorage.getItem('octopulse.octokey') &&
@@ -245,7 +315,7 @@ export default defineComponent({
             //   }
             // );
 
-            console.log(property);
+            //console.log(property);
 
             accounts.value = {
               electric: {
@@ -264,7 +334,7 @@ export default defineComponent({
               },
             };
 
-            console.log(accounts.value);
+            //console.log(accounts.value);
 
             getMeterElectric();
             getMeterGas();
@@ -290,7 +360,7 @@ export default defineComponent({
           }
         );
 
-        console.log('Electric: ', response.data);
+        //console.log('Electric: ', response.data);
 
         if (response.status === 200) {
           meterElectric.value = response.data.results;
@@ -325,7 +395,7 @@ export default defineComponent({
           }
         );
 
-        console.log('Gas: ', response.data.results);
+        //console.log('Gas: ', response.data.results);
 
         if (response.status === 200) {
           meterGas.value = response.data.results;
@@ -349,7 +419,7 @@ export default defineComponent({
         try {
           $q.localStorage.set('octopulse.octokey', octokey.value);
           $q.localStorage.set('octopulse.accountID', accountID.value);
-          console.log('Store');
+          //console.log('Store');
         } catch (e) {
           console.log(e);
         }
@@ -362,6 +432,8 @@ export default defineComponent({
     const reset = () => {
       octokey.value = null;
       accountID.value = null;
+      $q.localStorage.remove('octopulse.octokey');
+      $q.localStorage.remove('octopulse.accountID');
       accounts.value = null;
       meterElectric.value = null;
       meterGas.value = null;
@@ -402,6 +474,10 @@ export default defineComponent({
       seeUsage,
       reset,
       isLoading,
+      toggleSettings,
+      showSettings,
+      goalType,
+      goal,
     };
   },
 });
