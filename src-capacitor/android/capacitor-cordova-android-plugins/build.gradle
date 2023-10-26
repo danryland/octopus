@@ -46,12 +46,13 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "org.apache.cordova:framework:$cordovaAndroidVersion"
     // SUB-PROJECT DEPENDENCIES START
-    
+    implementation "androidx.browser:browser:1.3.0"
     // SUB-PROJECT DEPENDENCIES END
 }
 
 // PLUGIN GRADLE EXTENSIONS START
-
+apply from: "cordova.variables.gradle"
+apply from: "../../node_modules/cordova-plugin-safariviewcontroller/build/android/SafariViewController-java18.gradle"
 // PLUGIN GRADLE EXTENSIONS END
 
 for (def func : cdvPluginPostBuildExtras) {

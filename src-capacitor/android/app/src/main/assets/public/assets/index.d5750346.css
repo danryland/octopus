@@ -10826,6 +10826,22 @@ body.body--dark {
   z-index: 1;
 }
 
+.widget .footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 8px;
+}
+
+.widget .footer .q-linear-progress {
+  border-radius: 4px;
+  width: 48px;
+}
+
+.text-custom-dark {
+  background-color: #190b4e;
+}
+
 .q-field {
   font-size: 18px;
 }
@@ -10834,59 +10850,75 @@ body.body--dark {
   padding: 0px 24px;
 }
 
-.q-dialog {
+.settings div > .q-card {
+  padding-top: 16px;
+}
+
+.settings .q-card__section {
+  padding: 0px 16px 16px 16px;
+}
+
+.settings .q-card__actions {
+  padding: 0px 16px 16px 16px;
+}
+
+.settings .q-card.q-card--dark {
+  box-shadow: none !important;
+}
+
+.q-dialog.login {
   text-align: center;
 }
 
-.q-dialog .q-img {
+.q-dialog.login .q-img {
   width: 100px;
   height: auto;
   margin-bottom: 24px;
 }
 
-.q-dialog p {
+.q-dialog.login p {
   font-weight: bold;
   font-size: 18px;
   line-height: normal;
   color: white;
 }
 
-.q-dialog p a {
+.q-dialog.login p a {
   margin-left: 2px;
   color: #5cbcf0;
   text-decoration: none;
   border-bottom: 1px dashed rgba(92, 188, 240, 0.5);
 }
 
-.q-dialog .q-input,
-.q-dialog .q-btn {
+.q-dialog.login .q-input,
+.q-dialog.login .q-btn {
   max-width: 400px;
   margin: 0 auto 16px auto;
 }
 
-.q-dialog .legal {
+.q-dialog.login .legal {
   font-weight: normal;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.5);
 }
 
-.q-dialog .legal a {
+.q-dialog.login .legal a {
   color: rgba(255, 255, 255, 0.5);
   border-bottom-color: rgba(255, 255, 255, 0.2);
 }
 
-.q-dialog .q-card {
+.q-dialog.login .q-card {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
 }
 
-.q-dialog .q-card.q-card--dark {
+.q-dialog.login .q-card.q-card--dark {
   box-shadow: none !important;
 }
 
-.q-dialog .q-card .top {
+.q-dialog.login .q-card .top {
   display: flex;
   padding: 16px 32px;
   flex-direction: column;
@@ -10897,7 +10929,7 @@ body.body--dark {
   align-self: stretch;
 }
 
-.q-dialog .q-card .bottom {
+.q-dialog.login .q-card .bottom {
   padding: 32px 32px 40px 32px;
   display: flex;
   flex-direction: column;
@@ -10905,23 +10937,23 @@ body.body--dark {
   align-self: stretch;
 }
 
-.q-dialog .q-card .bottom .q-img {
+.q-dialog.login .q-card .bottom .q-img {
   width: 60px;
   margin-bottom: 16px;
 }
 
-.q-dialog .q-card .bottom p {
+.q-dialog.login .q-card .bottom p {
   line-height: 1.3em;
   margin-bottom: 0px;
 }
 
-.q-dialog .q-card .bottom p a {
+.q-dialog.login .q-card .bottom p a {
   margin: 0px;
   color: #de5cf0;
   border-bottom-color: rgba(222, 92, 240, 0.5);
 }
 
-body.q-ios-padding .q-dialog__inner > div {
+body.q-ios-padding .q-dialog.login .q-dialog__inner > div {
   padding: 0px !important;
   height: 100vh !important;
 }

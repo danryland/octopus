@@ -23,7 +23,11 @@
                 >Typical amounts:
                 <a
                   class="text-grey"
-                  href="https://www.ofgem.gov.uk/average-gas-and-electricity-usage#:~:text=We%20estimate%20the%20typical%20household,on%20energy%20prices%2C%20like%20the"
+                  @click="
+                    openURL(
+                      'https://www.ofgem.gov.uk/average-gas-and-electricity-usage#:~:text=We%20estimate%20the%20typical%20household,on%20energy%20prices%2C%20like%20the'
+                    )
+                  "
                   >Ofgem</a
                 ></small
               >
@@ -77,7 +81,11 @@
             <p>
               Octopus API Key &amp; Account ID<br />
               <a
-                href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+                @click="
+                  openURL(
+                    'https://octopus.energy/dashboard/new/accounts/personal-details/api-access'
+                  )
+                "
                 >Get your key and ID</a
               >
             </p>
@@ -112,7 +120,11 @@
             />
             <p class="legal">
               <a
-                href="https://octopus.energy/dashboard/new/accounts/personal-details/api-access"
+                @click="
+                  openURL(
+                    'https://octopus.energy/dashboard/new/accounts/personal-details/api-access'
+                  )
+                "
                 >Rest your API key</a
               >
               at anytime.
@@ -124,7 +136,7 @@
             <q-img src="~/assets/img/no-octopus.svg" alt="no Octo" />
             <p>
               No Octopus?<br />
-              <a href="https://share.octopus.energy/neat-clove-522"
+              <a @click="openURL('https://share.octopus.energy/neat-clove-522')"
                 >Get Octopus Energy</a
               >
             </p>
@@ -203,7 +215,7 @@
 import axios from 'axios';
 import moment from 'moment';
 import { defineComponent, onMounted, ref } from 'vue';
-import { useQuasar } from 'quasar';
+import { useQuasar, openURL } from 'quasar';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -478,6 +490,7 @@ export default defineComponent({
       showSettings,
       goalType,
       goal,
+      openURL,
     };
   },
 });
