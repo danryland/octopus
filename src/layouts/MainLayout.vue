@@ -8,19 +8,22 @@
           </q-card-section>
           <q-card-section>
             <p>Daily goals</p>
-            <q-input label="Cost" type="number" standout rounded v-model.number="goals.total" class="q-mb-md" />
-            <div class="row q-col-gutter-md">
-              <div class="col-6">
-                <q-input label="Electric" type="number" standout rounded v-model.number="goals.electric" />
+            <div class="row q-col-gutter-sm">
+              <div class="col-4">
+                <q-input label="Total cost" standout rounded v-model="goals.total" mask="##.##" fill-mask="0"
+                  class="q-mb-md" />
               </div>
-              <div class="col-6">
-                <q-input label="Gas" type="number" standout rounded v-model.number="goals.gas" />
+              <div class="col-4">
+                <q-input label="Electric" standout rounded v-model="goals.electric" mask="##.##" fill-mask="0" />
+              </div>
+              <div class="col-4">
+                <q-input label="Gas" standout rounded v-model="goals.gas" mask="##.##" fill-mask="0" />
               </div>
             </div>
           </q-card-section>
-          <q-card-section>
+          <!-- <q-card-section>
             <q-toggle size="md" v-model="round" label="Two decimal places" />
-          </q-card-section>
+          </q-card-section> -->
           <q-card-actions>
             <q-btn rounded label="Done" no-caps outline color="primary" size="lg" v-close-popup class="full-width" />
           </q-card-actions>
@@ -385,12 +388,6 @@ export default defineComponent({
     };
 
     const getTotalCost = async () => {
-
-      // console.log(accounts.value)
-
-      // console.log(meterElectric.value)
-      // console.log(meterGas.value)
-
       const electricTariff = accounts.value.electric;
       const gasTariff = accounts.value.gas;
 
@@ -418,72 +415,69 @@ export default defineComponent({
           ),
         ]);
 
-        if (electricResponse.status === 200) {
-          //console.log('Electricity Standard Unit Rates: ', electricResponse.data.results);
-          //console.log('Electric', meterElectric.value)
+        let totalCostPerPeriod = [];
 
-          let totalElectric = 0;
+        if (electricResponse.status === 200 && gasResponse.status === 200) {
+          const gasUnitRate = gasResponse.data.results.length > 0 ? gasResponse.data.results[0].value_inc_vat / 100 : 0;
 
-          const electricRates = electricResponse.data.results
-            .map((electricItem) => {
-              const matchingElectricEntry = meterElectric.value.find((entry) => {
-                const entryStart = moment(entry.interval_start);
-                const rateStart = moment(electricItem.valid_from);
-                // Adjust for UTC if necessary
-                if (!entryStart.isUTC()) {
-                  entryStart.utc();
-                }
-                if (!rateStart.isUTC()) {
-                  rateStart.utc();
-                }
-                return entryStart.isSame(rateStart, 'minute');
-              });
-              const electricConsumption = matchingElectricEntry?.consumption || 0;
-              const electricCost = (electricItem.value_inc_vat / 100) * electricConsumption;
-              totalElectric += electricCost;
-              return {
-                time: moment(electricItem.valid_from).format('HH:mm'),
-                value_inc_vat: electricCost,
-              };
-            })
-            .sort((a, b) => moment(a.time, 'HH:mm').diff(moment(b.time, 'HH:mm')));
+          // Sort electric response data by valid_from time in ascending order
+          const sortedElectricData = electricResponse.data.results.sort((a, b) => {
+            return moment(a.valid_from).diff(moment(b.valid_from));
+          });
 
-          totalCost.value = totalElectric.toFixed(2);
-          console.log(`Total Electric Cost: ${totalElectric.toFixed(2)}`);
+          sortedElectricData.forEach((electricItem) => {
+            const matchingElectricEntry = meterElectric.value.find((entry) => {
+              const entryStart = moment(entry.interval_start);
+              const rateStart = moment(electricItem.valid_from);
+              // Adjust for UTC if necessary
+              if (!entryStart.isUTC()) {
+                entryStart.utc();
+              }
+              if (!rateStart.isUTC()) {
+                rateStart.utc();
+              }
+              return entryStart.isSame(rateStart, 'minute');
+            });
 
-          largestCost.value = Math.max(...electricRates.map(rate => rate.value_inc_vat));
-          console.log(`Largest Electric Cost: ${largestCost.value.toFixed(2)}`);
+            const electricConsumption = matchingElectricEntry?.consumption || 0;
+            const electricCost = (electricItem.value_inc_vat / 100) * electricConsumption;
+            const gasConsumption = meterGas.value.reduce((acc, item) => {
+              const gasStart = moment(item.interval_start);
+              const rateStart = moment(electricItem.valid_from);
+              if (!gasStart.isUTC()) {
+                gasStart.utc();
+              }
+              if (!rateStart.isUTC()) {
+                rateStart.utc();
+              }
+              return gasStart.isSame(rateStart, 'minute') ? acc + item.consumption : acc;
+            }, 0);
+            const gasCost = gasConsumption * gasUnitRate;
+            const totalCostForPeriod = electricCost + gasCost;
 
+            totalCostPerPeriod.push({
+              time: moment(electricItem.valid_from).format('HH:mm'),
+              totalCost: totalCostForPeriod,
+            });
+          });
+
+          totalCostPerPeriod.sort((a, b) => moment(a.time, 'HH:mm').diff(moment(b.time, 'HH:mm')));
+
+          totalCost.value = totalCostPerPeriod.reduce((acc, item) => acc + item.totalCost, 0).toFixed(2);
+          largestCost.value = Math.max(...totalCostPerPeriod.map(item => item.totalCost)).toFixed(2);
           chartTotalCost.value = {
-            labels: electricRates.map((item) => item.time),
+            labels: totalCostPerPeriod.map((item) => item.time),
             datasets: [
               {
-                data: electricRates.map((item) => item.value_inc_vat),
+                data: totalCostPerPeriod.map((item) => item.totalCost),
                 backgroundColor: ['#DE5CF0'],
-              },
-            ],
-          };
-
-          chartTotalCost.value = {
-            labels: electricRates.map((item) => item.time),
-            datasets: [
-              {
-                data: electricRates.map((item) => item.value_inc_vat),
-                backgroundColor: ['#DE5CF0'],
-              },
+              }
             ],
           };
         }
       } catch (error) {
         console.error('Error fetching standard unit rates:', error);
       }
-
-      // GET /v1/products/{product_code}/electricity-tariffs/{tariff_code}/standing-charges/
-      // GET /v1/products/{product_code}/electricity-tariffs/{tariff_code}/standard-unit-rates/
-
-      // GET /v1/products/{product_code}/gas-tariffs/{tariff_code}/standing-charges/
-      // GET /v1/products/{product_code}/gas-tariffs/{tariff_code}/standard-unit-rates/
-
     };
 
     const seeUsage = () => {

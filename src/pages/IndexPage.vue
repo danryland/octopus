@@ -8,14 +8,14 @@
     <div class="widget widget-goal">
       <PieChart :chartData="data" :options="options" />
     </div>
-    <div class="widget widget-cost">
+    <div v-if="totalCost" class="widget widget-cost">
       <h2>💰 Total cost</h2>
       <p class="total">
-        £{{ totalCost }}/£{{ goals.total.toFixed(toFixed) }}
+        £{{ totalCost }}/£{{ goals.total }}
       </p>
       <div class="chart">
         <p v-if="largestCost" class="top">
-          £{{ largestCost.toFixed(toFixed) }}
+          £{{ largestCost }}
         </p>
         <p v-else class="top">£0.00</p>
         <BarChart :chartData="chartTotalCost" :options="optionsTotalCost" />
@@ -27,8 +27,7 @@
     <div v-if="totalElectric" class="widget widget-elec">
       <h2>⚡ Electric</h2>
       <p class="total">
-        {{ totalElectric.toFixed(toFixed) }}/{{ goalElectric.toFixed(toFixed)
-        }}<small>kWh</small>
+        {{ totalElectric.toFixed(toFixed) }}/{{ goalElectric }}<small>kWh</small>
       </p>
       <div class="chart">
         <p v-if="largestElectric" class="top">
@@ -50,8 +49,7 @@
     <div v-if="totalElectric" class="widget widget-gas">
       <h2>🔥 Gas</h2>
       <p class="total">
-        {{ totalGas.toFixed(toFixed) }}/{{ goalGas.toFixed(toFixed)
-        }}<small>m<sup>3</sup></small>
+        {{ totalGas.toFixed(toFixed) }}/{{ goalGas }}<small>m<sup>3</sup></small>
       </p>
       <div class="chart">
         <p v-if="largestGas > 0" class="top">
@@ -157,6 +155,11 @@ export default defineComponent({
 
     const optionsTotalCost = ref({
       responsive: true,
+      layout: {
+        padding: {
+          top: 0
+        }
+      },
       plugins: {
         legend: {
           display: false,
@@ -192,6 +195,11 @@ export default defineComponent({
     });
     const optionsElectric = ref({
       responsive: true,
+      layout: {
+        padding: {
+          top: 0
+        }
+      },
       plugins: {
         legend: {
           display: false,
@@ -225,6 +233,11 @@ export default defineComponent({
     });
     const optionsGas = ref({
       responsive: true,
+      layout: {
+        padding: {
+          top: 0
+        }
+      },
       plugins: {
         legend: {
           display: false,
