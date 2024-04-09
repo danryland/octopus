@@ -1,17 +1,28 @@
 <template>
   <q-page class="q-px-lg">
-    <div
-      v-if="isLoading"
-      class="flex items-center justify-center full-height full-width"
-      style="height: 50vh !important"
-    >
+    <div v-if="isLoading" class="flex items-center justify-center full-height full-width"
+      style="height: 50vh !important">
       <q-spinner-ios color="primary" size="2em" />
     </div>
 
-    <div style="display: none">{{ goal[goalType] }}</div>
-
     <div class="widget widget-goal">
       <PieChart :chartData="data" :options="options" />
+    </div>
+    <div class="widget widget-cost">
+      <h2>💰 Total cost</h2>
+      <p class="total">
+        £{{ totalCost }}/£{{ goals.total.toFixed(toFixed) }}
+      </p>
+      <div class="chart">
+        <p v-if="largestCost" class="top">
+          £{{ largestCost.toFixed(toFixed) }}
+        </p>
+        <p v-else class="top">£0.00</p>
+        <BarChart :chartData="chartTotalCost" :options="optionsTotalCost" />
+      </div>
+      <div class="footer">
+        <p>Total £{{ totalCost }}</p>
+      </div>
     </div>
     <div v-if="totalElectric" class="widget widget-elec">
       <h2>⚡ Electric</h2>
@@ -29,25 +40,9 @@
       <div class="footer">
         <p>Total {{ totalElectric.toFixed(toFixed) }}<small>kWh</small></p>
         <div class="flex items-center q-gutter-x-sm">
-          <q-linear-progress
-            size="8px"
-            rounded
-            :value="progressElectric"
-            color="green"
-            track-color="red"
-          />
-          <q-icon
-            v-if="progressElectric === 0"
-            name="wifi_off"
-            size="18px"
-            color="red"
-          />
-          <q-icon
-            v-else-if="progressElectric > 0 && progressElectric <= 0.5"
-            name="wifi"
-            size="18px"
-            color="yellow"
-          />
+          <q-linear-progress size="8px" rounded :value="progressElectric" color="green" track-color="red" />
+          <q-icon v-if="progressElectric === 0" name="wifi_off" size="18px" color="red" />
+          <q-icon v-else-if="progressElectric > 0 && progressElectric <= 0.5" name="wifi" size="18px" color="yellow" />
           <q-icon v-else name="wifi" size="18px" color="green" />
         </div>
       </div>
@@ -72,25 +67,9 @@
           Total {{ totalGas.toFixed(toFixed) }}<small>m<sup>3</sup></small>
         </p>
         <div class="flex items-center q-gutter-x-sm">
-          <q-linear-progress
-            size="8px"
-            rounded
-            :value="progressGas"
-            color="green"
-            track-color="red"
-          />
-          <q-icon
-            v-if="progressGas === 0"
-            name="wifi_off"
-            size="18px"
-            color="red"
-          />
-          <q-icon
-            v-else-if="progressGas > 0 && progressGas <= 0.5"
-            name="wifi"
-            size="18px"
-            color="yellow"
-          />
+          <q-linear-progress size="8px" rounded :value="progressGas" color="green" track-color="red" />
+          <q-icon v-if="progressGas === 0" name="wifi_off" size="18px" color="red" />
+          <q-icon v-else-if="progressGas > 0 && progressGas <= 0.5" name="wifi" size="18px" color="yellow" />
           <q-icon v-else name="wifi" size="18px" color="green" />
         </div>
       </div>
@@ -98,48 +77,8 @@
   </q-page>
 </template>
 
-<!-- https://www.ofgem.gov.uk/average-gas-and-electricity-usage#:~:text=We%20estimate%20the%20typical%20household,on%20energy%20prices%2C%20like%20the
-
-Energy Use
-
-Example – home type and number of residents
-
-Typical annual gas use (kWh)
-
-Typical annual electricity use (kWh)
-
-Typical annual electricity use (multi-rate, such as Economy 7) (kWh)
-
-Low
-
-Flat or 1-bedroom house; 1 to 2 people
-
-7,500
-
-1,800
-
-2,200
-Medium
-
-2-3 bedroom house; 2 to 3 people
-
-11,500
-
-2,700
-
-3,900
-High
-
-4+ bedroom home; 4 to 5 people
-
-17,000
-
-4,100
-
-6,700 -->
-
 <script>
-import { defineComponent, ref, computed, watchEffect } from 'vue';
+import { defineComponent, ref, computed, watchEffect, watch } from 'vue';
 import { BarChart, PieChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
 
@@ -153,11 +92,19 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    totalCost: {
+      type: [String, Number],
+      default: '0'
+    },
     chartElectric: {
       type: Object,
       default: () => ({}),
     },
     chartGas: {
+      type: Object,
+      default: () => ({}),
+    },
+    chartTotalCost: {
       type: Object,
       default: () => ({}),
     },
@@ -185,6 +132,14 @@ export default defineComponent({
       type: Object,
       default: () => ({}),
     },
+    goals: {
+      type: Object,
+      default: () => ({}),
+    },
+    largestCost: {
+      type: [String, Number],
+      default: 0
+    }
   },
   setup(props) {
     const toFixed = computed(() => {
@@ -200,6 +155,41 @@ export default defineComponent({
     const progressElectric = ref(0);
     const progressGas = ref(0);
 
+    const optionsTotalCost = ref({
+      responsive: true,
+      plugins: {
+        legend: {
+          display: false,
+        },
+        tooltips: {
+          callbacks: {
+            label: 'GB',
+          },
+        },
+      },
+      elements: {
+        bar: {
+          borderRadius: 10,
+        },
+      },
+      scales: {
+        y: {
+          ticks: {
+            display: false, // This line hides the y-axis labels
+          },
+          grid: {
+            display: false,
+          },
+        },
+        x: {
+          ticks: {
+            autoSkip: true, // This line will automatically skip labels to prevent overlap
+            maxRotation: 0, // This line prevents the labels from rotating
+            minRotation: 0, // This line prevents the labels from rotating
+          },
+        },
+      },
+    });
     const optionsElectric = ref({
       responsive: true,
       plugins: {
@@ -287,8 +277,8 @@ export default defineComponent({
       return Math.max(...props.meterGas.map((item) => item.consumption));
     });
 
-    const goalElectric = ref(null);
-    const goalGas = ref(null);
+    const goalElectric = ref(0);
+    const goalGas = ref(0);
 
     const percentTotalElectric = ref(null);
     const percentGoalElectric = ref(null);
@@ -297,44 +287,66 @@ export default defineComponent({
     const percentGoalGas = ref(null);
 
     watchEffect(() => {
-      goalElectric.value = props.goal[props.goalType].electric / 365;
-      goalGas.value = props.goal[props.goalType].gas / 365;
+      updateProgressAndData();
+    });
 
-      progressElectric.value = props.meterElectric.length / 24;
-      progressGas.value = props.meterGas.length / 24;
+    // watch(() => props.goals, () => {
+    //   updateProgressAndData();
+    // }, { deep: true });
 
-      percentTotalElectric.value =
-        (totalElectric.value / goalElectric.value) * 100;
-      percentGoalElectric.value =
-        totalElectric.value > goalElectric.value
-          ? 0
-          : 100 - percentTotalElectric.value;
+    function updateProgressAndData() {
+      const { total: goalTotalValue, electric: goalElectricValue, gas: goalGasValue } = props.goals;
+      goalElectric.value = goalElectricValue;
+      goalGas.value = goalGasValue;
 
-      percentTotalGas.value = (totalGas.value / goalGas.value) * 100;
-      percentGoalGas.value =
-        totalGas.value > goalGas.value ? 0 : 100 - percentTotalGas.value;
+      const electricLength = props.meterElectric.length;
+      const gasLength = props.meterGas.length;
+      progressElectric.value = electricLength / 24;
+      progressGas.value = gasLength / 24;
+
+      const totalElectricValue = totalElectric.value;
+      const totalGasValue = totalGas.value;
+      const totalCostValue = props.totalCost;
+      percentTotalElectric.value = (totalElectricValue / goalElectricValue) * 100;
+      percentGoalElectric.value = totalElectricValue > goalElectricValue ? 0 : 100 - percentTotalElectric.value;
+
+      percentTotalGas.value = (totalGasValue / goalGasValue) * 100;
+      percentGoalGas.value = totalGasValue > goalGasValue ? 0 : 100 - percentTotalGas.value;
+
+      const percentTotalCost = (totalCostValue / goalTotalValue) * 100;
+      const percentGoalCost = totalCostValue > goalTotalValue ? 0 : 100 - percentTotalCost;
+
+      const borderRadiusElectric = totalElectricValue > goalElectricValue ? 0 : Number.MAX_VALUE;
+      const borderRadiusGas = totalGasValue > goalGasValue ? 0 : Number.MAX_VALUE;
+      const borderRadiusTotalCost = totalCostValue > goalTotalValue ? 0 : Number.MAX_VALUE;
 
       data.value = {
-        labels: ['Electric', 'Gas'],
+        labels: ['Total cost', 'Electric', 'Gas'],
         datasets: [
           {
-            data: [percentTotalElectric, percentGoalElectric],
-            backgroundColor: ['#FCE94F', '#0E012E'],
+            data: [percentTotalCost, percentGoalCost],
+            backgroundColor: ['#DE5CF0', '#0E012E'],
             borderWidth: 3,
-            borderRadius:
-              totalElectric.value > goalElectric.value ? 0 : Number.MAX_VALUE, // Change border radius based on totalElectric and goalElectric
+            borderRadius: borderRadiusTotalCost,
             borderColor: '#0E012E',
           },
           {
-            data: [percentTotalGas, percentGoalGas],
+            data: [percentTotalElectric.value, percentGoalElectric.value],
+            backgroundColor: ['#E9F05C', '#0E012E'],
+            borderWidth: 3,
+            borderRadius: borderRadiusElectric,
+            borderColor: '#0E012E',
+          },
+          {
+            data: [percentTotalGas.value, percentGoalGas.value],
             backgroundColor: ['#729FCF', '#0E012E'],
             borderWidth: 3,
-            borderRadius: totalGas.value > goalGas.value ? 0 : Number.MAX_VALUE, // Change border radius based on totalGas and goalGas
+            borderRadius: borderRadiusGas,
             borderColor: '#0E012E',
           },
         ],
       };
-    });
+    }
 
     const options = {
       responsive: true,
@@ -352,6 +364,7 @@ export default defineComponent({
     return {
       data,
       options,
+      optionsTotalCost,
       optionsElectric,
       optionsGas,
       totalElectric,

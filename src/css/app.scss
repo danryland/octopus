@@ -51,6 +51,12 @@
       color: $gas;
     }
   }
+  &-cost {
+    .total,
+    p {
+      color: $total;
+    }
+  }
   canvas {
     height: 120px !important;
   }
