@@ -76,7 +76,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, computed, watchEffect, watch } from 'vue';
+import { defineComponent, ref, computed, watchEffect } from 'vue';
 import { BarChart, PieChart } from 'vue-chart-3';
 import { Chart, registerables } from 'chart.js';
 
