@@ -253,7 +253,7 @@ export default defineComponent({
               });
 
               const electricTariffSections = electricAgreement.tariff_code.split('-');
-              const electricProductCode = electricTariffSections.slice(2, 6).join('-');
+              const electricProductCode = electricTariffSections.slice(2, -1).join('-');
 
               const gasAgreement = gasTariffs.find((ag) => {
                 const validFrom = new Date(ag.valid_from);
@@ -262,7 +262,10 @@ export default defineComponent({
               });
 
               const gasTariffSections = gasAgreement.tariff_code.split('-');
-              const gasProductCode = gasTariffSections.slice(2, 6).join('-');
+              const gasProductCode = gasTariffSections.slice(2, -1).join('-');
+
+              console.log(electricTariffSections, gasTariffSections)
+              console.log(electricProductCode, gasProductCode)
 
               isAgile.value = electricAgreement.tariff_code.includes('AGILE');
 
@@ -427,47 +430,71 @@ export default defineComponent({
 
         if (electricResponse.status === 200 && gasResponse.status === 200) {
           const gasUnitRate = gasResponse.data.results.length > 0 ? gasResponse.data.results[0].value_inc_vat / 100 : 0;
+          const electricRates = electricResponse.data.results;
+          const electricUnitRate = electricRates.length === 1 ? electricRates[0].value_inc_vat / 100 : null;
 
-          // Sort electric response data by valid_from time in ascending order
-          const sortedElectricData = electricResponse.data.results.sort((a, b) => {
-            return moment(a.valid_from).diff(moment(b.valid_from));
-          });
+          if (electricUnitRate !== null) {
+            // If there's only one electric rate, apply it to all time periods
+            meterElectric.value.forEach((electricItem) => {
+              const electricConsumption = electricItem.consumption || 0;
+              const electricCost = electricUnitRate * electricConsumption;
+              const gasConsumption = meterGas.value.reduce((acc, item) => {
+                const gasStart = moment(item.interval_start);
+                const electricStart = moment(electricItem.interval_start);
+                if (!gasStart.isUTC()) {
+                  gasStart.utc();
+                }
+                if (!electricStart.isUTC()) {
+                  electricStart.utc();
+                }
+                return gasStart.isSame(electricStart, 'minute') ? acc + item.consumption : acc;
+              }, 0);
+              const gasCost = gasConsumption * gasUnitRate;
+              const totalCostForPeriod = electricCost + gasCost;
 
-          sortedElectricData.forEach((electricItem) => {
-            const matchingElectricEntry = meterElectric.value.find((entry) => {
-              const entryStart = moment(entry.interval_start);
-              const rateStart = moment(electricItem.valid_from);
-              // Adjust for UTC if necessary
-              if (!entryStart.isUTC()) {
-                entryStart.utc();
-              }
-              if (!rateStart.isUTC()) {
-                rateStart.utc();
-              }
-              return entryStart.isSame(rateStart, 'minute');
+              totalCostPerPeriod.push({
+                time: moment(electricItem.interval_start).format('HH:mm'),
+                totalCost: totalCostForPeriod,
+              });
             });
+          } else {
+            // If there are multiple electric rates, match each time period
+            electricRates.forEach((electricItem) => {
+              const matchingElectricEntry = meterElectric.value.find((entry) => {
+                const entryStart = moment(entry.interval_start);
+                const rateStart = moment(electricItem.valid_from);
+                // Adjust for UTC if necessary
+                if (!entryStart.isUTC()) {
+                  entryStart.utc();
+                }
+                if (!rateStart.isUTC()) {
+                  rateStart.utc();
+                }
+                return entryStart.isSame(rateStart, 'minute');
+              });
 
-            const electricConsumption = matchingElectricEntry?.consumption || 0;
-            const electricCost = (electricItem.value_inc_vat / 100) * electricConsumption;
-            const gasConsumption = meterGas.value.reduce((acc, item) => {
-              const gasStart = moment(item.interval_start);
-              const rateStart = moment(electricItem.valid_from);
-              if (!gasStart.isUTC()) {
-                gasStart.utc();
-              }
-              if (!rateStart.isUTC()) {
-                rateStart.utc();
-              }
-              return gasStart.isSame(rateStart, 'minute') ? acc + item.consumption : acc;
-            }, 0);
-            const gasCost = gasConsumption * gasUnitRate;
-            const totalCostForPeriod = electricCost + gasCost;
+              const electricConsumption = matchingElectricEntry?.consumption || 0;
+              const electricCost = (electricItem.value_inc_vat / 100) * electricConsumption;
+              const gasConsumption = meterGas.value.reduce((acc, item) => {
+                const gasStart = moment(item.interval_start);
+                const rateStart = moment(electricItem.valid_from);
+                if (!gasStart.isUTC()) {
+                  gasStart.utc();
+                }
+                if (!rateStart.isUTC()) {
+                  rateStart.utc();
+                }
+                return gasStart.isSame(rateStart, 'minute') ? acc + item.consumption : acc;
+              }, 0);
+              const gasCost = gasConsumption * gasUnitRate;
+              const totalCostForPeriod = electricCost + gasCost;
 
-            totalCostPerPeriod.push({
-              time: moment(electricItem.valid_from).format('HH:mm'),
-              totalCost: totalCostForPeriod,
+              totalCostPerPeriod.push({
+                time: moment(electricItem.valid_from).format('HH:mm'),
+                totalCost: totalCostForPeriod,
+              });
             });
-          });
+          }
 
           totalCostPerPeriod.sort((a, b) => moment(a.time, 'HH:mm').diff(moment(b.time, 'HH:mm')));
 
