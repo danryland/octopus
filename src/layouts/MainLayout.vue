@@ -87,10 +87,10 @@
             <div class="day-title">
               <template v-if="activeDay === 1">Yesterday,
                 {{
-      moment().subtract(activeDay, 'days').format('DD MMM')
+      moment().subtract(activeDay, 'days').format('D MMM')
     }}</template>
               <template v-else>
-                {{ moment().subtract(activeDay, 'days').format('ddd, DD MMM') }}
+                {{ moment().subtract(activeDay, 'days').format('ddd, D MMM') }}
               </template>
             </div>
             <div style="width: 40px; text-align: right">
@@ -263,9 +263,6 @@ export default defineComponent({
 
               const gasTariffSections = gasAgreement.tariff_code.split('-');
               const gasProductCode = gasTariffSections.slice(2, -1).join('-');
-
-              console.log(electricTariffSections, gasTariffSections)
-              console.log(electricProductCode, gasProductCode)
 
               isAgile.value = electricAgreement.tariff_code.includes('AGILE');
 
