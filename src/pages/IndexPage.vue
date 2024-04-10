@@ -9,13 +9,17 @@
       <PieChart :chartData="data" :options="options" />
     </div>
     <div v-if="totalCost" class="widget widget-cost">
-      <h2>💰 Total cost</h2>
+      <h2>💰 Total cost
+        <q-icon name="help">
+          <q-tooltip anchor="center end" self="center left" class="bg-dark">Doesn't include standing charge</q-tooltip>
+        </q-icon>
+      </h2>
       <p class="total">
-        £{{ totalCost }}/£{{ goals.total }}
+        {{ totalCost }}/{{ goals.total }}
       </p>
       <div class="chart">
         <p v-if="largestCost" class="top">
-          £{{ largestCost }}
+          {{ largestCost }}
         </p>
         <p v-else class="top">£0.00</p>
         <BarChart :chartData="chartTotalCost" :options="optionsTotalCost" />
@@ -327,11 +331,14 @@ export default defineComponent({
       percentGoalGas.value = totalGasValue > goalGasValue ? 0 : 100 - percentTotalGas.value;
 
       const percentTotalCost = (totalCostValue / goalTotalValue) * 100;
-      const percentGoalCost = totalCostValue > goalTotalValue ? 0 : 100 - percentTotalCost;
+      const percentGoalCost = parseFloat(totalCostValue) > parseFloat(goalTotalValue) ? 0 : 100 - percentTotalCost;
 
-      const borderRadiusElectric = totalElectricValue > goalElectricValue ? 0 : Number.MAX_VALUE;
-      const borderRadiusGas = totalGasValue > goalGasValue ? 0 : Number.MAX_VALUE;
-      const borderRadiusTotalCost = totalCostValue > goalTotalValue ? 0 : Number.MAX_VALUE;
+      const borderRadiusElectric = parseFloat(totalElectricValue) > parseFloat(goalElectricValue) ? 0 : Number.MAX_VALUE;
+      const borderRadiusGas = parseFloat(totalGasValue) > parseFloat(goalGasValue) ? 0 : Number.MAX_VALUE;
+      const borderRadiusTotalCost = parseFloat(totalCostValue) > parseFloat(goalTotalValue) ? 0 : Number.MAX_VALUE;
+
+      console.log(percentTotalCost, percentGoalCost)
+      console.log(percentTotalElectric.value, percentGoalElectric.value)
 
       data.value = {
         labels: ['Total cost', 'Electric', 'Gas'],

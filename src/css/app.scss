@@ -35,7 +35,7 @@
   .total {
     color: $primary;
     font-size: 32px;
-    font-weight: 400;
+    font-weight: 500;
     line-height: normal;
     margin-bottom: 8px;
   }
@@ -61,6 +61,7 @@
     height: 120px !important;
   }
   &-goal {
+    margin-bottom: 0px !important;
     canvas {
       height: 180px !important;
     }
@@ -73,7 +74,7 @@
       top: 0px;
       left: 0px;
       color: rgba(white, 0.6);
-      font-weight: bold;
+      font-weight: 600;
       z-index: 1;
     }
   }

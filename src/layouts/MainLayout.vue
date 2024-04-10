@@ -9,15 +9,14 @@
           <q-card-section>
             <p>Daily goals</p>
             <div class="row q-col-gutter-sm">
-              <div class="col-4">
-                <q-input label="Total cost" standout rounded v-model="goals.total" mask="##.##" fill-mask="0"
-                  class="q-mb-md" />
+              <div class="col-12 col-md-4">
+                <q-input label="Total cost" standout rounded v-model="goals.total" class="q-mb-sm" />
               </div>
-              <div class="col-4">
-                <q-input label="Electric" standout rounded v-model="goals.electric" mask="##.##" fill-mask="0" />
+              <div class="col-12 col-md-4">
+                <q-input label="Electric" standout rounded v-model="goals.electric" class="q-mb-sm" />
               </div>
-              <div class="col-4">
-                <q-input label="Gas" standout rounded v-model="goals.gas" mask="##.##" fill-mask="0" />
+              <div class="col-12 col-md-4">
+                <q-input label="Gas" standout rounded v-model="goals.gas" class="q-mb-sm" />
               </div>
             </div>
           </q-card-section>
@@ -80,8 +79,8 @@
     </q-dialog>
     <q-page-container>
       <q-header class="bg-dark">
-        <q-toolbar class="flex column items-center q-py-lg">
-          <div class="flex row full-width justify-between items-center q-pb-md q-px-md">
+        <q-toolbar class="flex column items-center q-pt-lg q-pb-md q-px-none">
+          <div class="flex row full-width justify-between items-center q-pb-md q-px-lg">
             <div style="width: 40px; text-align: left">
               <q-img style="max-width: 32px" src="~/assets/img/logo-octopus.svg" alt="logo" />
             </div>
@@ -98,7 +97,7 @@
               <q-icon @click="toggleSettings" size="sm" name="settings" />
             </div>
           </div>
-          <div class="days q-px-md flex q-gutter-x-md no-wrap scroll">
+          <div ref="scrollContainer" class="days q-px-lg flex q-gutter-x-md q-pb-md no-wrap scroll">
             <q-btn class="day" v-for="n in Array(30)
         .fill()
         .map((_, i) => 29 - i)" :key="n" @click="updatePeriod(n + 1)" no-caps round unelevated
@@ -162,9 +161,9 @@ export default defineComponent({
 
     const goalType = ref('medium');
     const goals = ref({
-      total: 10.00,
-      electric: 20.00,
-      gas: 10.00,
+      total: '10.00',
+      electric: '20.00',
+      gas: '10.00',
     });
     const goal = ref({
       low: {
@@ -182,6 +181,16 @@ export default defineComponent({
     });
     const totalCost = ref(0.00);
     const largestCost = ref(0.00);
+    const scrollContainer = ref(null);
+
+    const scrollToRight = () => {
+      const container = scrollContainer.value;
+      console.log('Yes')
+      if (container) {
+        // Scroll to the end on the right side
+        container.scrollLeft = container.scrollWidth - container.offsetWidth;
+      }
+    };
 
     const checkStorage = () => {
       //console.log('checkStorage');
@@ -511,6 +520,7 @@ export default defineComponent({
 
     onMounted(() => {
       checkStorage();
+      scrollToRight();
     });
 
     if (debug.value == true) {
@@ -549,7 +559,8 @@ export default defineComponent({
       goal,
       goals,
       openURL,
-      largestCost
+      largestCost,
+      scrollContainer
     };
   },
 });
