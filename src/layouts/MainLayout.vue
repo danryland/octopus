@@ -185,7 +185,6 @@ export default defineComponent({
 
     const scrollToRight = () => {
       const container = scrollContainer.value;
-      console.log('Yes')
       if (container) {
         // Scroll to the end on the right side
         container.scrollLeft = container.scrollWidth - container.offsetWidth;

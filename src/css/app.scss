@@ -198,3 +198,12 @@ body.q-ios-padding .q-dialog.login .q-dialog__inner > div {
   padding: 0px !important;
   height: 100vh !important;
 }
+
+.widget-cost {
+  h2 {
+    .q-icon {
+      position: relative;
+      top: -2px;
+    }
+  }
+}

@@ -10,8 +10,10 @@
     </div>
     <div v-if="totalCost" class="widget widget-cost">
       <h2>💰 Total cost
-        <q-icon name="help">
-          <q-tooltip anchor="center end" self="center left" class="bg-dark">Doesn't include standing charge</q-tooltip>
+        <q-icon name="help" @click="toggle = !toggle" :class="toggle ? 'text-white' : 'text-grey-8'">
+          <q-tooltip v-model="toggle" no-parent-event anchor="top middle" self="bottom middle" class="bg-black">Doesn't
+            include<br>standing
+            charge</q-tooltip>
         </q-icon>
       </h2>
       <p class="total">
@@ -152,6 +154,8 @@ export default defineComponent({
       }
     });
 
+    const toggle = ref(false);
+
     const data = ref(null);
 
     const progressElectric = ref(0);
@@ -167,12 +171,7 @@ export default defineComponent({
       plugins: {
         legend: {
           display: false,
-        },
-        tooltips: {
-          callbacks: {
-            label: 'GB',
-          },
-        },
+        }
       },
       elements: {
         bar: {
@@ -337,9 +336,6 @@ export default defineComponent({
       const borderRadiusGas = parseFloat(totalGasValue) > parseFloat(goalGasValue) ? 0 : Number.MAX_VALUE;
       const borderRadiusTotalCost = parseFloat(totalCostValue) > parseFloat(goalTotalValue) ? 0 : Number.MAX_VALUE;
 
-      console.log(percentTotalCost, percentGoalCost)
-      console.log(percentTotalElectric.value, percentGoalElectric.value)
-
       data.value = {
         labels: ['Total cost', 'Electric', 'Gas'],
         datasets: [
@@ -400,6 +396,7 @@ export default defineComponent({
       percentGoalGas,
       progressElectric,
       progressGas,
+      toggle
     };
   },
 });
